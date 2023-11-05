@@ -47,9 +47,11 @@ async function run() {
             console.log(query);
         }
 
+        const total = await jobsCollection.countDocuments();
         const cursor = jobsCollection.find(query);
         const result = await cursor.toArray();
-        res.send(result);
+
+        res.send({total, result});
     }) 
 
 
