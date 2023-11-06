@@ -38,21 +38,25 @@ async function run() {
     const jobsCollection = database.collection('jobCategory');
 
     app.get('/jobCategories', async(req, res) => {
-
+       
         try{
-
+          const email = req.query.email;
             const categoryName = req.query.category;
             //  console.log('category name', categoryName);
     
            
             let query = {};
+
+            if(email) {
+              query.email = email;
+            }
     
             if(categoryName) {
                 query.category = categoryName;
                 // console.log(query);
             }
             
-            const total = await jobsCollection.countDocuments();
+            const total = jobsCollection.countDocuments();
             const cursor = jobsCollection.find(query);
             const result = await cursor.toArray();
     
