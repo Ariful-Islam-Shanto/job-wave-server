@@ -35,24 +35,38 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const database = client.db('JobsDB');
-    const jobsCollection = database.collection('category');
+    const jobsCollection = database.collection('jobCategory');
 
     app.get('/jobCategories', async(req, res) => {
-        const categoryName = req.query.category;
-         console.log('category name', categoryName);
-        let query = {};
 
-        if(categoryName) {
-            query.category = categoryName;
-            console.log(query);
+        try{
+
+            const categoryName = req.query.category;
+            //  console.log('category name', categoryName);
+    
+           
+            let query = {};
+    
+            if(categoryName) {
+                query.category = categoryName;
+                // console.log(query);
+            }
+            
+            const total = await jobsCollection.countDocuments();
+            const cursor = jobsCollection.find(query);
+            const result = await cursor.toArray();
+    
+            res.send(result);
+        }catch (err) {
+            console.log(err);
         }
-
-        const total = await jobsCollection.countDocuments();
-        const cursor = jobsCollection.find(query);
-        const result = await cursor.toArray();
-
-        res.send({total, result});
     }) 
+
+    app.post('/addAJob', async(req, res) => {
+      const job = req.body;
+      const result = await jobsCollection.insertOne(job);
+      res.send(result);
+    })
 
 
     await client.db("admin").command({ ping: 1 });
