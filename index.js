@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
@@ -47,6 +47,7 @@ async function run() {
            
             let query = {};
 
+
             if(email) {
               query.email = email;
             }
@@ -65,6 +66,32 @@ async function run() {
             console.log(err);
         }
     }) 
+
+    app.get('/jobById/:id', async (req, res) => {
+      try{
+        const id = req.params.id;
+        const query = {_id : new ObjectId(id)};
+        const result = await jobsCollection.findOne(query);
+        res.send(result);
+      }catch (err) {
+        console.log(err);
+      }
+    }) 
+
+    app.get('/AllJobs', async (req, res) => {
+      const jobTitle = req.query.title;
+      let query = {};
+
+      if(jobTitle) {
+         query.title = jobTitle;
+        console.log(jobTitle);
+      }
+
+      const cursor = jobsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+
+    })
 
     app.post('/addAJob', async(req, res) => {
       const job = req.body;
