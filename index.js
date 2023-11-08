@@ -55,13 +55,13 @@ async function run() {
     
             if(categoryName) {
                 query.category = categoryName;
-                // console.log(query);
+                console.log(query);
             }
             
             const total = jobsCollection.countDocuments();
             const cursor = jobsCollection.find(query);
             const result = await cursor.toArray();
-    
+            // console.log("result" , result);
             res.send(result);
         }catch (err) {
             console.log(err);
@@ -104,6 +104,16 @@ async function run() {
     app.post('/addApplyJob', async(req, res) => {
       const applyJob = req.body;
       const result = await applyJobCollection.insertOne(applyJob);
+      res.send(result);
+    })
+
+    app.patch('/updateApplicants', async (req, res) => {
+      const updateData = req.body;
+      const query = { _id : new ObjectId(updateData._id)}
+      const increase = {
+        $inc: { applicants: 1 }
+      }
+      const result = await jobsCollection.updateOne(query, increase);
       res.send(result);
     })
 
