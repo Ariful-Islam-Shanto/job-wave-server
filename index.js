@@ -36,6 +36,7 @@ async function run() {
 
     const database = client.db('JobsDB');
     const jobsCollection = database.collection('jobCategory');
+    const applyJobCollection = database.collection('appliedJobs')
 
     app.get('/jobCategories', async(req, res) => {
        
@@ -96,6 +97,13 @@ async function run() {
     app.post('/addAJob', async(req, res) => {
       const job = req.body;
       const result = await jobsCollection.insertOne(job);
+      res.send(result);
+    })
+
+
+    app.post('/addApplyJob', async(req, res) => {
+      const applyJob = req.body;
+      const result = await applyJobCollection.insertOne(applyJob);
       res.send(result);
     })
 
