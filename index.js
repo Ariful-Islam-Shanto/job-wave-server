@@ -47,7 +47,7 @@ async function run() {
     //?Middleware
 const verifyToken = (req, res, next) => {
   const token = req.cookies.token;
-  console.log(token);
+
   //? if there is no token in cookies return from here.
 
   if(!token) {
@@ -81,7 +81,19 @@ const verifyToken = (req, res, next) => {
       .send({success : true});
     })
 
-    app.get('/jobCategories', verifyToken, async(req, res) => {
+     //? If the user logged out then clear the cookie
+
+     app.post('/clearCookie', async(req, res) => {
+      const user = req.body;
+      console.log(user);
+      //! when clearing the cookie make sure to give secure : true and samSite : "none" into the value object.
+      res.clearCookie('token', { maxAge : 0 , secure : true, sameSite : 'none' }).send('Successfully cleared the cookie');
+     })
+     
+
+
+    //? Job api
+    app.get('/jobCategories', async(req, res) => {
        
         try{
           const email = req.query.email;
@@ -128,7 +140,7 @@ const verifyToken = (req, res, next) => {
 
       if(jobTitle) {
          query.title = jobTitle;
-        console.log(jobTitle);
+        // console.log(jobTitle);
       }
 
       const cursor = jobsCollection.find(query);
@@ -222,6 +234,13 @@ const verifyToken = (req, res, next) => {
         $inc: { applicants: 1 }
       }
       const result = await jobsCollection.updateOne(query, increase);
+      res.send(result);
+    })
+
+    app.delete('/deleteJob/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+      const result = await jobsCollection.deleteOne(query);
       res.send(result);
     })
 
