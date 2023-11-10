@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 //? middleware
 app.use(express.json());
 app.use(cors({
-  origin : ['http://localhost:5173'],
+  origin : ['http://localhost:5173','https://job-wave-9ad4d.web.app', 'https://job-wave-9ad4d.firebaseapp.com', 'https://dazzling-cendol-e382a5.netlify.app'],
   credentials: true
 }));
 app.use(cookieParser());
@@ -72,11 +72,12 @@ const verifyToken = (req, res, next) => {
       //* now generate the token
       const secret = process.env.ACCESS_TOKEN_SECRET;
       const token = jwt.sign(user, secret, {expiresIn : '1h'});
+      console.log("token", token);
       res
       .cookie('token', token, {
-         httpOnly: true,
-         secure: true,
-         sameSite: 'none'
+        httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', 
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       })
       .send({success : true});
     })
@@ -86,8 +87,8 @@ const verifyToken = (req, res, next) => {
      app.post('/clearCookie', async(req, res) => {
       const user = req.body;
       console.log(user);
-      //! when clearing the cookie make sure to give secure : true and samSite : "none" into the value object.
-      res.clearCookie('token', { maxAge : 0 , secure : true, sameSite : 'none' }).send('Successfully cleared the cookie');
+      res.clearCookie('token', { maxAge : 0 ,  secure: process.env.NODE_ENV === 'production', 
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', }).send('Successfully cleared the cookie');
      })
      
 
@@ -98,8 +99,7 @@ const verifyToken = (req, res, next) => {
         try{
           const email = req.query.email;
             const categoryName = req.query.category;
-            //  console.log('category name', categoryName);
-    
+
            
             let query = {};
 
@@ -127,6 +127,7 @@ const verifyToken = (req, res, next) => {
       try{
         const id = req.params.id;
         const query = {_id : new ObjectId(id)};
+        console.log(query);
         const result = await jobsCollection.findOne(query);
         res.send(result);
       }catch (err) {
@@ -140,7 +141,6 @@ const verifyToken = (req, res, next) => {
 
       if(jobTitle) {
          query.title = jobTitle;
-        // console.log(jobTitle);
       }
 
       const cursor = jobsCollection.find(query);
@@ -149,29 +149,8 @@ const verifyToken = (req, res, next) => {
 
     })
 
-    // app.get('/appliedJobs', async(req, res) => {
-    //   const email = req.query.email;
-    //   const category = req.query.category;
-    //   let query = {};
-      
-    //   if(email && category) {
-    //       // query.applicant_email = email; 
-    //       query = {applicant_email : email, category : category}
-    //       const cursor = applyJobCollection.find(query);
-    //       const result = await cursor.toArray();
-    //       res.send(result);
-    //   }
-    //   if(email) {
-    //       query.applicant_email = email; 
-    //       const cursor = applyJobCollection.find(query);
-    //       const result = await cursor.toArray();
-    //       res.send(result);
-    //   }
-
-    //   res.send({message : 'No data found by this email.'})
-
-    // })
-    app.get('/appliedJobs', async (req, res) => {
+    
+    app.get('/appliedJobs',verifyToken, async (req, res) => {
       const email = req.query.email;
       const category = req.query.category;
       let query = {};
@@ -184,13 +163,11 @@ const verifyToken = (req, res, next) => {
         
       const cursor = applyJobCollection.find(query);
       const result = await cursor.toArray();
-      // console.log('Query:', query);
-      // console.log('Result:', result);
       res.send(result);
     });
     
 
-    app.post('/addAJob', async(req, res) => {
+    app.post('/addAJob',verifyToken, async(req, res) => {
       const job = req.body;
       const result = await jobsCollection.insertOne(job);
       res.send(result);
@@ -245,7 +222,7 @@ const verifyToken = (req, res, next) => {
     })
 
 
-    await client.db("admin").command({ ping: 1 });
+  
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
